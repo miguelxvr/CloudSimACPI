@@ -1,0 +1,43 @@
+***********************
+CLOUDSIM wih DVFS tools
+***********************
+
+
+This version of CloudSim includes the DVFS tools.
+The DVFS has been implemented in a 'DVFS' package, located in the 'power' package.
+It allows to use the five common DVFS modes: performance, powersave, userspace, ondemand and conservative.
+
+A new package called XML has also been added, and allow to define all the environment configuration: datacenter, hosts, vm, cloudlet and DVFS parameters.
+
+Simple example of how to use this package are located in the folder: CloudSim_DVFS/src/modules/DVFS_Examples
+There are two folders called 'Self_Description' and 'XML' contain examples. The first one does not use the XML package, and the second one uses the XML description.
+
+In each example foler, a script allows to compile & launch them.
+
+To compile examples, go to the example folder and use the following command line:
+./Start_Experiment c
+
+To launch examples, go to the example folder and use the following command line:
+./Start_Experiment l
+
+Output files examples are saved (by default) in the folder : $OUTPUT=/usr/local/share/OUTPUT_CLOUDSIM/$Date
+
+
+REFERENCE:
+----------
+An article, published in the journal "Simulation Modelling Practice and Theory", describes the work done using this CloudSim-DVFS version.
+
+For any pulished work using this package, please cite this article as following :
+T. Guérout et al., Energy-aware simulation with DVFS, Simulat. Modell. Pract. Theory (2013), http://dx.doi.org/10.1016/j.simpat.2013.04.007
+
+
+
+Do not hesitate to contact me to share and discuss about your own experiments.
+
+Contact :
+---------
+Tom Guérout
+LAAS-CNRS / IRIT
+Toulouse, France
+tguerout@laas.fr
+

@@ -1,0 +1,1 @@
+mvn install:install-file -DgroupId=org.stdlib -DartifactId=memcached -Dversion=1.0 -Dfile=stdlib.jar -Dpackaging=jar -DgeneratePom=true
