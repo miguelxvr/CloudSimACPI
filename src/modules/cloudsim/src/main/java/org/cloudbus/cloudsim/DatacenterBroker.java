@@ -160,7 +160,6 @@ public class DatacenterBroker extends SimEntity {
 	 * @post $none
 	 */
 	public void submitCloudletList(List<? extends Cloudlet> list) {
-       //     Log.printLine("liste submit cloudlet size : " + list.size());
 		getCloudletList().addAll(list);
 	}
 
@@ -263,7 +262,6 @@ public class DatacenterBroker extends SimEntity {
 		int vmId = data[1];
 		int result = data[2];
                
-                
                 /*Log.printLine("datacenterId = " + datacenterId);
                 Log.printLine("vmId = " + vmId);
                 Log.printLine("result = " + result);*/
@@ -307,7 +305,11 @@ public class DatacenterBroker extends SimEntity {
 							+ ": none of the required VMs could be created. Aborting");
 					finishExecution();
 				}
-			}
+                                
+                        // not all acks were received
+			} else {
+                            submitCloudlets();
+                        }
 		}
 	}
 
@@ -326,19 +328,26 @@ public class DatacenterBroker extends SimEntity {
 		cloudletsSubmitted--;
 		if (getCloudletList().size() == 0 && cloudletsSubmitted == 0) { // all cloudlets executed
 			Log.printLine(CloudSim.clock() + ": " + getName() + ": All Cloudlets executed. Finishing...");
-			clearDatacenters();
-			finishExecution();
+			//clearDatacenters();
+			
+                        Vm vm = getVmsCreatedList().get(cloudlet.getVmId());
+                        sendNow(getVmsToDatacentersMap().get(cloudlet.getVmId()), CloudSimTags.VM_DESTROY, vm);
+                        send(getVmsToDatacentersMap().get(cloudlet.getVmId()), 6, CloudSimTags.END_OF_SIMULATION, vm);
+                        finishExecution();
                         processPostEvent();
                         // Maybe create an "Broker End Event" ?
                         
                         
 		} else { // some cloudlets haven't finished yet
-			if (getCloudletList().size() > 0 && cloudletsSubmitted == 0) {
-				// all the cloudlets sent finished. It means that some bount
-				// cloudlet is waiting its VM be created
-				clearDatacenters();
-				createVmsInDatacenter(0);
-			}
+//			if (getCloudletList().size() > 0 && cloudletsSubmitted == 0) {
+//				// all the cloudlets sent finished. It means that some bount
+//				// cloudlet is waiting its VM be created
+//				clearDatacenters();
+//				createVmsInDatacenter(0);
+//			} else {
+                            Vm vm = getVmsCreatedList().get(cloudlet.getVmId());
+                            sendNow(getVmsToDatacentersMap().get(cloudlet.getVmId()), CloudSimTags.VM_DESTROY, vm);
+  //                      }
 
 		}
 	}
@@ -391,8 +400,9 @@ public class DatacenterBroker extends SimEntity {
 		for (Vm vm : getVmList()) {
 			if (!getVmsToDatacentersMap().containsKey(vm.getId())) {
 				Log.printLine(CloudSim.clock() + ": " + getName() + ": Trying to Create VM #" + vm.getId()
-						+ " in " + datacenterName);
-				sendNow(datacenterId, CloudSimTags.VM_CREATE_ACK, vm);
+						+ " in " + datacenterName + " at " + vm.getStartTime());
+                                
+				send(datacenterId, vm.getStartTime(), CloudSimTags.VM_CREATE_ACK, vm);
 				requestedVms++;
 			}
 		}

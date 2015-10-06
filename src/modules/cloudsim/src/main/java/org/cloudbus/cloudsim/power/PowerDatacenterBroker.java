@@ -9,6 +9,7 @@
 package org.cloudbus.cloudsim.power;
 
 import org.cloudbus.cloudsim.DatacenterBroker;
+import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.EventPostBroker;
@@ -72,5 +73,20 @@ public class PowerDatacenterBroker extends DatacenterBroker {
 		}
 		super.processVmCreate(ev);
 	}
+        
+        @Override
+        protected void processOtherEvent(SimEvent ev) {
+            if (ev == null) {
+                Log.printLine(getName() + ".processOtherEvent(): Error - an event is null.");
+            }
+
+            switch (ev.getTag()) {
+                case CloudSimTags.CREATE_NEW_VM:
+                    Log.formatLine("%.2f: Event CREATE_NEW_VM received ", CloudSim.clock());
+                    //processVmCreate(ev);
+                    break;
+            }
+        }
+
 
 }

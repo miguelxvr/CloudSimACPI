@@ -43,13 +43,17 @@ public class PowerHost extends HostDynamicWorkload {
      */
     private PowerModel powerModel;
 
+    public static final int ACPI_ENTERING = 1;
+    public static final int ACPI_LEAVING = 2;
+    public static final int ACPI_STAYING = 3;
+    
     /* The current ACPI state */
     private boolean ACPIEnergySavingEnable;
     private String ACPIState;
     private String ACPIEnergySavingStrategy;
 
     /* All available ACPI states */
-    private int ACPIindexState = 3;
+    private int ACPIindexState = ACPI_STAYING;
     private HashMap<String, ACPIStateDatas> ACPIConfig;
 
     /**
@@ -157,11 +161,11 @@ public class PowerHost extends HostDynamicWorkload {
     public int getPowerSleepModeTime() {
         int time = 0;
         try {
-            if (ACPIindexState == 1) {
+            if (ACPIindexState == ACPI_ENTERING) {
                 time = getACPIStateData().getTime_entering();
-            } else if (ACPIindexState == 2) {
+            } else if (ACPIindexState == ACPI_LEAVING) {
                 time = getACPIStateData().getTime_leaving();
-            } else if (ACPIindexState == 3) {
+            } else if (ACPIindexState == ACPI_STAYING) {
                 time = getACPIStateData().getTime_staying();
             }
         } catch (Exception e) {
@@ -174,11 +178,11 @@ public class PowerHost extends HostDynamicWorkload {
     public int getPowerSleepModeTime(int index) {
         int time = 0;
         try {
-            if (index == 1) {
+            if (index == ACPI_ENTERING) {
                 time = getACPIStateData().getTime_entering();
-            } else if (index == 2) {
+            } else if (index == ACPI_LEAVING) {
                 time = getACPIStateData().getTime_leaving();
-            } else if (index == 3) {
+            } else if (index == ACPI_STAYING) {
                 time = getACPIStateData().getTime_staying();
             }
         } catch (Exception e) {

@@ -79,6 +79,8 @@ public class Vm {
         
         private boolean sizeHasBeenModified;
 
+        /* Time to be started */
+        private double startTime;
 
 	/** The mips allocation history. */
 	private final List<VmStateHistoryEntry> stateHistory = new LinkedList<VmStateHistoryEntry>();
@@ -137,6 +139,39 @@ public class Vm {
 	}
         public Vm()
         {setId(-1);}
+        
+        public Vm(
+			int id,
+			int userId,
+			double mips,
+			int numberOfPes,
+			int ram,
+			long bw,
+			long size,
+			String vmm,
+                        double startTime,
+			CloudletScheduler cloudletScheduler) {
+		setId(id);
+		setUserId(userId);
+		setUid(getUid(userId, id));
+		setMips(mips);
+                setMaxMips(mips);
+		setNumberOfPes(numberOfPes);
+		setRam(ram);
+		setBw(bw);
+		setSize(size);
+		setVmm(vmm);
+                setStartTime(startTime);
+		setCloudletScheduler(cloudletScheduler);
+
+		setInMigration(false);
+		setBeingInstantiated(true);
+
+		setCurrentAllocatedBw(0);
+		setCurrentAllocatedMips(null);
+		setCurrentAllocatedRam(0);
+		setCurrentAllocatedSize(0);
+	}
 
 	/**
 	 * Updates the processing of cloudlets running on this VM.
@@ -635,5 +670,11 @@ public class Vm {
         sizeHasBeenModified = SizeHasBeenModified_;
     }
 
+    public double getStartTime() {
+        return startTime;
+    }
 
+    public void setStartTime(double startTime) {
+        this.startTime = startTime;
+    }
 }

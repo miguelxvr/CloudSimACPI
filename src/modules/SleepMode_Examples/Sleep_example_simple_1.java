@@ -58,21 +58,16 @@ import org.cloudbus.cloudsim.provisioners.BwProvisionerSimple;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import org.cloudbus.cloudsim.provisioners.RamProvisionerSimple;
 
-/**
- * An example of a heterogeneous DVFS-enabled data center: the voltage and clock
- * frequency of the CPU are adjusted ideally according to current resource
- * requirements.
- */
-
 public class Sleep_example_simple {
 
-    private static SimulationXMLParse ConfSimu;
     private static DvfsDatas ConfigDvfs;
     private static List<Cloudlet> cloudletList;
+
     private static List<Vm> vmList;
-    
     private static int user_id;
+
     private static int hostsNumber = 3;
+
     private static int no_cur_vm = 0;
     private static int no_cur_cloudlet = 0;
 
@@ -100,40 +95,57 @@ public class Sleep_example_simple {
             int brokerId = broker.getId();
             user_id = brokerId;
 
-            vmList = new ArrayList<>();
-            cloudletList = new ArrayList<>();
-
-//            Atlantica04 Leaving: 175s -> 123w
-//            Atlantica04 Staying: 0 -> 110w
-//            Atlantica04 Entering: 6s -> 115w
-        
-            int time_next = 0;
-            for (int i = 0; i < 10; i++) {
-                vmList.add(createVm(user_id, 0 + time_next));
-                cloudletList.add(createCloudlet(user_id, 30000 - 17500));
-                vmList.add(createVm(user_id, 0 + time_next));
-                cloudletList.add(createCloudlet(user_id, 30000 - 17500));
-                vmList.add(createVm(user_id, 0 + time_next));
-                cloudletList.add(createCloudlet(user_id, 30000 - 17500));
-
-                vmList.add(createVm(user_id, 600 + time_next));
-                cloudletList.add(createCloudlet(user_id, 42000 - 17500));
-                vmList.add(createVm(user_id, 660 + time_next));
-                cloudletList.add(createCloudlet(user_id, 42000 - 17500));
-                vmList.add(createVm(user_id, 720 + time_next));
-                cloudletList.add(createCloudlet(user_id, 42000 - 17500));
-
-                vmList.add(createVm(user_id, 1440 + time_next));
-                cloudletList.add(createCloudlet(user_id, 18000 - 17500));
-                vmList.add(createVm(user_id, 1560 + time_next));
-                cloudletList.add(createCloudlet(user_id, 24000 - 17500));
-                vmList.add(createVm(user_id, 1740 + time_next));
-                cloudletList.add(createCloudlet(user_id, 18000 - 17500));
-                time_next = time_next + 1980;
-            }
+            vmList = createVms(user_id, 1, 0);
+            cloudletList = createCloudletList(user_id, 30000, 3, 0);
 
             broker.submitVmList(vmList);
             broker.submitCloudletList(cloudletList);
+
+            final int insertTimes[][] = {{300, 30000}};
+            Log.printLine(String.format("insertTimes.length %d sec", insertTimes[0][1]));
+                            
+            // A thread that will create a new broker at 10 clock time
+            Runnable monitor = new Runnable() {
+
+                //int insertTimes[][] = {{600, 42000}, {660, 42000}, {720, 42000}, {1440, 18000}, {1560, 24000}, {1740, 18000}};
+
+                @Override
+                public void run() {
+                    int i = 0;
+                    while (i < insertTimes.length) {
+                        CloudSim.pauseSimulation(insertTimes[i][0]);
+                        while (true) {
+                            if (CloudSim.isPaused()) {
+
+                                Log.printLine("\n Adding VMs on the datacenter \n\n");
+
+                                DatacenterBroker broker = createBroker("Broker_added_" + i);
+                                int brokerId = broker.getId();
+
+                                //Create VMs and Cloudlets and send them to broker
+                                vmList = createVms(brokerId, 1, 100); //creating 1 vms
+                                cloudletList = createCloudletList(brokerId, insertTimes[i][1], 1, 100); // creating 1 cloudlets
+
+                                broker.submitVmList(vmList);
+                                broker.submitCloudletList(cloudletList);
+
+                                CloudSim.resumeSimulation();
+
+                                break;
+                            }
+                            try {
+                                Thread.sleep(100);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        i++;
+                    }
+                }
+            };
+
+            new Thread(monitor).start();
+            Thread.sleep(1000);
 
             Log.printLine(" Time to start \n\n");
 
@@ -165,10 +177,26 @@ public class Sleep_example_simple {
         Log.printLine("Dvfs_example_simple finished!");
     }
 
-    private static List<Cloudlet> createCloudletList(int userId, int nb_cloudlet, long length, int IdShift) {
+    private static Cloudlet createCloudlet(int userId, int length) {
+
+        int pesNumber = 2;
+        long fileSize = 300;
+        long outputSize = 300;
+        int offset = no_cur_cloudlet + 1;
+
+        Cloudlet cloudlet = new Cloudlet((offset), length, pesNumber, fileSize, outputSize, new UtilizationModelFull(), new UtilizationModelFull(), new UtilizationModelFull());
+        cloudlet.setUserId(userId);
+        cloudlet.setVmId((offset));
+        no_cur_cloudlet++;
+        System.out.println("Cloudlet created // No Cloudlet =  " + no_cur_cloudlet);
+
+        return cloudlet;
+    }
+
+    private static List<Cloudlet> createCloudletList(int userId, int length, int nb_cloudlet, int IdShift) {
         List<Cloudlet> list = new ArrayList<>();
 
-        int pesNumber = 1;
+        int pesNumber = 2;
         long fileSize = 300;
         long outputSize = 300;
         int offset = no_cur_cloudlet;
@@ -184,21 +212,6 @@ public class Sleep_example_simple {
             System.out.println("Cloudlet created // No Cloudlet =  " + no_cur_cloudlet + "  //  Cloudlet List Size = " + list.size());
         }
         return list;
-    }
-
-    private static Cloudlet createCloudlet(int userId, long length) {
-
-        int pesNumber = 1;
-        long fileSize = 300;
-        long outputSize = 300;
-
-        Cloudlet cloudlet = new Cloudlet(no_cur_cloudlet, length, pesNumber, fileSize, outputSize, new UtilizationModelFull(), new UtilizationModelFull(), new UtilizationModelFull());
-        cloudlet.setUserId(userId);
-        cloudlet.setVmId(no_cur_cloudlet);
-        no_cur_cloudlet++;
-        System.out.println("Cloudlet created // No Cloudlet =  " + no_cur_cloudlet);
-
-        return cloudlet;
     }
 
     public static void UpdateCloudletList(List<Cloudlet> list_) {
@@ -229,23 +242,6 @@ public class Sleep_example_simple {
         return vms;
     }
 
-    private static Vm createVm(int userId, double startTime) { //, int type_vm) {
-
-        int mips = 100;
-        int pesNumber = 2; // number of cpus
-        int ram = 128; // vm memory (MB)
-        long bw = 2500; // bandwidth
-        long size = 2500; // image size (MB)
-        String vmm = "Xen"; // VMM name
-
-        Vm vm = new Vm(no_cur_vm, userId, mips, pesNumber, ram, bw, size, vmm, startTime, new CloudletSchedulerSpaceShared());
-        no_cur_vm++;
-
-        System.out.println("VM created  // No VM =  " + no_cur_vm);
-
-        return vm;
-    }
-
     public static void UpdateVmList(List<Vm> list_) {
         vmList.addAll(list_);
     }
@@ -257,6 +253,7 @@ public class Sleep_example_simple {
         double maxPower = 250; // 250W
         double staticPowerPercent = 0.7; // 70%
         int mips = 100;
+        int nb_pe = 2;
         int ram = 10000; // host memory (MB)
         long storage = 1000000; // host storage
         int bw = 300000;
@@ -298,11 +295,11 @@ public class Sleep_example_simple {
 
         // State G2
         ACPIStateDatas acpiStateDatas3 = new ACPIStateDatas();
-        acpiStateDatas3.setPower_entering(115);
-        acpiStateDatas3.setPower_leaving(123);
-        acpiStateDatas3.setPower_staying(24);
+        acpiStateDatas3.setPower_entering(60);
+        acpiStateDatas3.setPower_leaving(160);
+        acpiStateDatas3.setPower_staying(20);
         acpiStateDatas3.setTime_entering(6);
-        acpiStateDatas3.setTime_leaving(175);
+        acpiStateDatas3.setTime_leaving(122);
         acpiStateDatas3.setTime_staying(0);
         acpiConfig.put("G2", acpiStateDatas3);
 
@@ -326,7 +323,6 @@ public class Sleep_example_simple {
 
             List<Pe> peList = new ArrayList<Pe>();
 
-            int nb_pe = 2;
             System.out.println("Number of CPU :  " + nb_pe);
 
             for (int pe = 0; pe < nb_pe; pe++) {

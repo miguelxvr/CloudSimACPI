@@ -266,7 +266,9 @@ public class CloudSimTags {
 	public static final int NextCycle = BASE + 48;
         
         public static final int HOST_CHANGE_SLEEP_STATE = BASE + 49;
-
+        
+        public static final int CREATE_NEW_VM = BASE + 50;
+        
         /** Private Constructor */
 	private CloudSimTags() {
 		throw new UnsupportedOperationException("CloudSim Tags cannot be instantiated");
