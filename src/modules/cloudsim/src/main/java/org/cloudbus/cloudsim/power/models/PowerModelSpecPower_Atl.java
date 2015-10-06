@@ -20,8 +20,8 @@ public class PowerModelSpecPower_Atl extends PowerModelSpecPowerDVFS {
          * tabIdle[f1][f2]....[fn] tabFull[f1][f2]....[fn]
          */
 
-        double Tab_Power_idle[] = {90, 94, 100, 104, 107, 109};
-        double Tab_Power_full[] = {170, 176, 182, 188, 193, 210};
+        double Tab_Power_idle[] = {90, 94, 100, 104, 107, 110};
+        double Tab_Power_full[] = {170, 176, 182, 188, 193, 190};
         List<Pe> peList;
 
         Pe tmp_pe;
