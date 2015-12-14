@@ -65,4 +65,16 @@ public class ACPIStateDatas {
     public void setTime_staying(int time_staying) {
         this.time_staying = time_staying;
     }
+    
+    public void setPower(double power_entering, double power_leaving, double power_staying) {
+        this.power_entering = power_entering;
+        this.power_leaving = power_leaving;
+        this.power_staying = power_staying;
+    }
+
+    public void setTime(int time_entering, int time_leaving, int time_staying) {
+        this.time_entering = time_entering;
+        this.time_leaving = time_leaving;
+        this.time_staying = time_staying;
+    }   
 }

@@ -39,7 +39,7 @@ import org.cloudbus.cloudsim.Host;
  * @author Anton Beloglazov
  * @since CloudSim Toolkit 2.0
  */
-public class PowerDatacenterSimpleACPIEnergySavingStrategy extends Datacenter {
+public class PowerDatacenterACPIGreenStrategy extends Datacenter {
 
     /**
      * The power.
@@ -74,7 +74,7 @@ public class PowerDatacenterSimpleACPIEnergySavingStrategy extends Datacenter {
      * @param storageList the storage list
      * @throws Exception the exception
      */
-    public PowerDatacenterSimpleACPIEnergySavingStrategy(
+    public PowerDatacenterACPIGreenStrategy(
             String name,
             DatacenterCharacteristics characteristics,
             VmAllocationPolicy vmAllocationPolicy,

@@ -330,11 +330,21 @@ public class DatacenterBroker extends SimEntity {
 			Log.printLine(CloudSim.clock() + ": " + getName() + ": All Cloudlets executed. Finishing...");
 			//clearDatacenters();
 			
-                        Vm vm = getVmsCreatedList().get(cloudlet.getVmId());
-                        sendNow(getVmsToDatacentersMap().get(cloudlet.getVmId()), CloudSimTags.VM_DESTROY, vm);
-                        send(getVmsToDatacentersMap().get(cloudlet.getVmId()), 6, CloudSimTags.END_OF_SIMULATION, vm);
-                        finishExecution();
-                        processPostEvent();
+                        for (int i = 0; i < getVmsCreatedList().size(); i++) {
+                            if(getVmsCreatedList().get(i).getId() == cloudlet.getVmId()) {
+                                Vm vm = getVmsCreatedList().get(i);
+                                sendNow(getVmsToDatacentersMap().get(cloudlet.getVmId()), CloudSimTags.VM_DESTROY, vm);
+                                send(getVmsToDatacentersMap().get(cloudlet.getVmId()), 6, CloudSimTags.END_OF_SIMULATION, vm);
+                                finishExecution();
+                                processPostEvent();
+                                return;
+                            }
+                        }
+//                        Vm vm = getVmsCreatedList().get(cloudlet.getVmId());
+//                        sendNow(getVmsToDatacentersMap().get(cloudlet.getVmId()), CloudSimTags.VM_DESTROY, vm);
+//                        send(getVmsToDatacentersMap().get(cloudlet.getVmId()), 6, CloudSimTags.END_OF_SIMULATION, vm);
+//                        finishExecution();
+//                        processPostEvent();
                         // Maybe create an "Broker End Event" ?
                         
                         
@@ -345,8 +355,14 @@ public class DatacenterBroker extends SimEntity {
 //				clearDatacenters();
 //				createVmsInDatacenter(0);
 //			} else {
-                            Vm vm = getVmsCreatedList().get(cloudlet.getVmId());
-                            sendNow(getVmsToDatacentersMap().get(cloudlet.getVmId()), CloudSimTags.VM_DESTROY, vm);
+                            Log.printLine("VM ID " + cloudlet.getVmId());
+                            Log.printLine("Size " + getVmsCreatedList().size());
+                            for (int i = 0; i < getVmsCreatedList().size(); i++) {
+                                if(getVmsCreatedList().get(i).getId() == cloudlet.getVmId()) {
+                                    Vm vm = getVmsCreatedList().get(i);
+                                    sendNow(getVmsToDatacentersMap().get(cloudlet.getVmId()), CloudSimTags.VM_DESTROY, vm);
+                                }
+                            }
   //                      }
 
 		}

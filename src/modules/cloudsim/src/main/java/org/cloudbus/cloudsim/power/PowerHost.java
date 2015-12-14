@@ -47,10 +47,16 @@ public class PowerHost extends HostDynamicWorkload {
     public static final int ACPI_LEAVING = 2;
     public static final int ACPI_STAYING = 3;
     
+    public static final int ACPI_G0 = 0;    
+    public static final int ACPI_G2 = 1;
+    public static final int ACPI_S2 = 2;
+    public static final int ACPI_S3 = 3;
+    
     /* The current ACPI state */
     private boolean ACPIEnergySavingEnable;
     private String ACPIState;
     private String ACPIEnergySavingStrategy;
+    private double ACPIStayingTime;
 
     /* All available ACPI states */
     private int ACPIindexState = ACPI_STAYING;
@@ -362,5 +368,13 @@ public class PowerHost extends HostDynamicWorkload {
 
     public void setACPIEnergySavingStrategy(String ACPIEnergySavingStrategy) {
         this.ACPIEnergySavingStrategy = ACPIEnergySavingStrategy;
+    }
+    
+    public double getACPIStayingTime() {
+        return ACPIStayingTime;
+    }
+
+    public void setACPIStayingTime(double ACPIStayingTime) {
+        this.ACPIStayingTime = ACPIStayingTime;
     }
 }
