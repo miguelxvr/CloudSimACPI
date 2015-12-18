@@ -1,7 +1,7 @@
 #! /bin/bash
 
 DIRCLOUDSIMJAR=../cloudsim/target/cloudsim-3.1-SNAPSHOT.jar
-classname=Sleep_example_simple
+classname=Sleep_example_fabio
 
 if [ "$1" == c ]
 then

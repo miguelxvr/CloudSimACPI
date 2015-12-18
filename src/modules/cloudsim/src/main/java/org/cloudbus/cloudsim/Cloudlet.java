@@ -149,6 +149,9 @@ public class Cloudlet {
 	/** The required files. */
 	private List<String> requiredFiles = null;   // list of required filenames
 
+        /** transactions per second metric of this cloudlet*/
+        private double performance_metric;
+
 	/**
 	 * Allocates a new Cloudlet object. The Cloudlet length, input and output file sizes should be
 	 * greater than or equal to 1. By default this constructor sets the history of this object.
@@ -1462,5 +1465,12 @@ public class Cloudlet {
 	public double getUtilizationOfBw(final double time) {
 		return getUtilizationModelBw().getUtilization(time);
 	}
+        
+        public double getPerformance_metric() {
+            return performance_metric;
+        }
 
+        public void setPerformance_metric(double performance_metric) {
+            this.performance_metric = performance_metric;
+        }
 }
