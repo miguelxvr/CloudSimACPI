@@ -75,7 +75,25 @@ public class PowerDatacenterACPIFabio extends Datacenter {
     private double check_interval;
     private double current_check_time;
     private int nG0_lasttime;
+    
+    private int nG0 = 0;
+    private int nS2 = 0;
+    private int nS3 = 0;
+    private int nG2 = 0;
 
+    private int nG0_tmp = 0;
+    private int nG2_tmp = 0;
+    private int nS2_tmp = 0;
+
+    private int req_S2 = 0;
+    private int req_G2 = 0;
+    private boolean hasStateChanges = false;
+    private double timeFrameDatacenterEnergy = 0.0;
+    private double timeFrameHostEnergy = 0.0;
+    private double currentTime = CloudSim.clock();
+    private double minTime = Double.MAX_VALUE;
+    private double timeDiff = currentTime - getLastProcessTime();
+    
     /**
      * Instantiates a new datacenter.
      *
@@ -127,7 +145,6 @@ public class PowerDatacenterACPIFabio extends Datacenter {
 
         // if some time passed since last processing
         if (currentTime > getLastProcessTime()) {
-            System.out.print(currentTime + " ");
 
             double minTime = updateCloudetProcessingWithoutSchedulingFutureEventsForce();
 
@@ -204,25 +221,25 @@ public class PowerDatacenterACPIFabio extends Datacenter {
      * @return the double
      */
     protected double updateCloudetProcessingWithoutSchedulingFutureEventsForce() {
-        double currentTime = CloudSim.clock();
-        double minTime = Double.MAX_VALUE;
-        double timeDiff = currentTime - getLastProcessTime();
-        double timeFrameDatacenterEnergy = 0.0;
-        double timeFrameHostEnergy = 0.0;
+        currentTime = CloudSim.clock();
+        minTime = Double.MAX_VALUE;
+        timeDiff = currentTime - getLastProcessTime();
+        timeFrameDatacenterEnergy = 0.0;
+        timeFrameHostEnergy = 0.0;
 
-        int nG0 = 0;
-        int nS2 = 0;
-        int nS3 = 0;
-        int nG2 = 0;
+        nG0 = 0;
+        nS2 = 0;
+        nS3 = 0;
+        nG2 = 0;
 
-        int nG0_tmp = 0;
-        int nG2_tmp = 0;
-        int nS2_tmp = 0;
+        nG0_tmp = 0;
+        nG2_tmp = 0;
+        nS2_tmp = 0;
         
-        int req_S2 = 0;
-        int req_G2 = 0;
-        boolean hasStateChanges = false;
-                
+        req_S2 = 0;
+        req_G2 = 0;
+        hasStateChanges = false;
+
         Log.printLine("\n\n--------------------------------------------------------------\n\n");
         Log.formatLine("New resource usage for the time frame starting at %.2f:", currentTime);
 
@@ -266,7 +283,11 @@ public class PowerDatacenterACPIFabio extends Datacenter {
                         req_S2 = (int) alpha;
                     }
                     
+                    if (req_S2 > (getHostList().size() - nG0_tmp))
+                        req_S2 = getHostList().size() - nG0_tmp;
+
                     req_G2 = (getHostList().size() - req_S2 - nG0_tmp);
+                    
                     Log.formatLine("lambda -> %d / %d = %.2f", nG0_tmp, nG0_lasttime, lambda);
                     //Log.formatLine("alpha -> 1 - ((%.2f - %.2f) / %.2f) - %.2f) = %.2f", getSla_threashhold(), getSla_current(), getSla_threashhold(), lambda, alpha);
                     Log.formatLine("alpha -> ((%.2f - %.2f) / %.2f) + %.2f) = %.2f", performance_metric_current, performance_metric_last, performance_metric_current, lambda, alpha);
@@ -322,6 +343,7 @@ public class PowerDatacenterACPIFabio extends Datacenter {
                                 data[0] = host.getId();
                                 data[1] = PowerHost.ACPI_LEAVING;
                                 sendNow(getId(), CloudSimTags.HOST_CHANGE_SLEEP_STATE, data);
+                                host.setIsStateChanging(true);
                                 
                                 /* Enter into G0 */
                                 int[] data2 = new int[2];
@@ -344,6 +366,7 @@ public class PowerDatacenterACPIFabio extends Datacenter {
                                 data[0] = host.getId();
                                 data[1] = PowerHost.ACPI_LEAVING;
                                 sendNow(getId(), CloudSimTags.HOST_CHANGE_SLEEP_STATE, data);
+                                host.setIsStateChanging(true);
                                 
                                 /* Enter into G0 */
                                 int[] data2 = new int[2];
@@ -374,29 +397,23 @@ public class PowerDatacenterACPIFabio extends Datacenter {
                 }
 
                 timeFrameDatacenterEnergy += timeFrameHostEnergy;
-
-                //Log.printLine();
+                if (host.getIndexState() == PowerHost.ACPI_LEAVING && host.getACPILeavingTime() > 0) {
+                    host.setACPILeavingTime(host.getACPILeavingTime() - timeDiff);
+                    Log.formatLine("%.2f: [Host #%d] time to leave from state %s now is %.2f%%", currentTime, host.getId(), host.getACPIState(), host.getACPILeavingTime());
+                }
+                        
                 Log.formatLine("%.2f: [Host #%d] utilization at %.2f was %.2f%%, now is %.2f%%", currentTime, host.getId(), getLastProcessTime(), previousUtilizationOfCpu * 100, utilizationOfCpu * 100);
-                Log.formatLine("%.2f: [Host #%d] energy is %f W*sec", currentTime, host.getId(), timeFrameHostEnergy);
-
-                host.isDvfsActivatedOnHost();
-
-//                if (!host.getVmList().isEmpty()) {
-//                    if (host.isEnableSleepMode() && host.getIndexSleepMode() != 0) {
-//                        host.setIndexSleepMode(0);
-//                        System.out.println("SLEEP STATE STATUS OF HOST " + host.getId() + " HAS CHANGED TO " + host.getIndexSleepMode());
-//                    }
-//                }
+                Log.formatLine("%.2f: [Host #%d] energy is %f W*sec\n", currentTime, host.getId(), timeFrameHostEnergy);
             }
+
             hasStateChanges = false;
-            Log.formatLine("\n%.2f: Data center's energy is %.2f W*sec", currentTime, timeFrameDatacenterEnergy);
-            Log.formatLine("\n%.2f: Data center's sleep states G0:%d,S2:%d,S3:%d,G2:%d", currentTime, nG0, nS2, nS3, nG2);
+            Log.formatLine("%.2f: Data center's sleep states G0:%d,S2:%d,S3:%d,G2:%d", currentTime, nG0, nS2, nS3, nG2);
 
         }
 
         setPower(getPower() + timeFrameDatacenterEnergy);
-        Log.formatLine("%.2f: Data center's energy sum is %.2f W*sec\n", currentTime, getPower());
-        Log.formatLine("\n%.2f: Data center's energy is %.2f W*sec\n", currentTime, timeFrameDatacenterEnergy);
+        Log.formatLine("%.2f: Data center's energy sum is %.2f W*sec", currentTime, getPower());
+        Log.formatLine("%.2f: Data center's energy is %.2f W*sec", currentTime, timeFrameDatacenterEnergy);
 
         checkCloudletCompletion();
 
@@ -471,7 +488,7 @@ public class PowerDatacenterACPIFabio extends Datacenter {
             if (result && ((PowerHost) vm.getHost()).isACPIEnergySavingEnable()
                     && ((PowerHost) vm.getHost()).getIndexState() == PowerHost.ACPI_LEAVING) {
                 PowerHost tmp_host = (PowerHost) vm.getHost();
-                delay = tmp_host.getPowerSleepModeTime(PowerHost.ACPI_LEAVING);
+                delay = tmp_host.getACPILeavingTime();
                 total_latency_cloudlet += delay;
                 Log.formatLine("%.2f: VM %d will take %.2f seconds to start up", currentTime, vm.getId(), delay);
             }
@@ -523,7 +540,8 @@ public class PowerDatacenterACPIFabio extends Datacenter {
 
             send(getId(), 0.02, CloudSimTags.HOST_CHANGE_SLEEP_STATE, data);
         }
-
+        
+        cl.setHostId(host.getId());
         setPerformance_metric_current(getPerformance_metric_current() + cl.getPerformance_metric());
     }
 
@@ -681,6 +699,7 @@ public class PowerDatacenterACPIFabio extends Datacenter {
 
     protected void processChangeHostSleepState(SimEvent ev, boolean ack) {
         int receivedData[] = (int[]) ev.getData();
+        ev = null;
         int hostId = receivedData[0];
         int sleepStateIndex = receivedData[1];
         PowerHost h = (PowerHost) getHostList().get(hostId);
@@ -699,12 +718,14 @@ public class PowerDatacenterACPIFabio extends Datacenter {
             h.setIndexState(sleepStateIndex);
             if (sleepStateIndex == PowerHost.ACPI_STAYING) {
                 h.setACPIStayingTime(0);
+                h.setIsStateChanging(false);
             }
         }
     }
 
     protected void processChangeHostACPIState(SimEvent ev, boolean ack) {
         int receivedData[] = (int[]) ev.getData();
+        ev = null;
         int hostId = receivedData[0];
         int ACPIState = receivedData[1];
         PowerHost h = (PowerHost) getHostList().get(hostId);

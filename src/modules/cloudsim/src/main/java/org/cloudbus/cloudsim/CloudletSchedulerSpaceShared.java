@@ -74,8 +74,6 @@ public class CloudletSchedulerSpaceShared extends CloudletScheduler {
 	@Override
 	public double updateVmProcessing(double currentTime, List<Double> mipsShare) {
 		setCurrentMipsShare(mipsShare);
-                System.out.println("currentTime " + currentTime);
-                System.out.println("getPreviousTime() " + getPreviousTime());
 		double timeSpam = currentTime - getPreviousTime(); // time since last update
 		double capacity = 0.0;
 		int cpus = 0;
@@ -110,7 +108,6 @@ public class CloudletSchedulerSpaceShared extends CloudletScheduler {
 		List<ResCloudlet> toRemove = new ArrayList<ResCloudlet>();
 		for (ResCloudlet rcl : getCloudletExecList()) {
 			// finished anyway, rounding issue...
-                        System.out.println("CloudLet length " + rcl.getRemainingCloudletLength());
 			if (rcl.getRemainingCloudletLength() == 0) {
 				toRemove.add(rcl);
 				cloudletFinish(rcl);

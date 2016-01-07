@@ -777,8 +777,6 @@ public class Datacenter extends SimEntity {
 			// if this cloudlet is in the exec queue
 			if (estimatedFinishTime > 0.0 && !Double.isInfinite(estimatedFinishTime)) {
 				estimatedFinishTime += fileTransferTime;
-                                System.out.println("estimatedFinishTime -> " + estimatedFinishTime);
-
                                 send(getId(), estimatedFinishTime, CloudSimTags.VM_DATACENTER_EVENT);
 			}
 
@@ -793,8 +791,6 @@ public class Datacenter extends SimEntity {
 				sendNow(cl.getUserId(), tag, data);
 			}
                        
-                        System.out.println("length -> " + cl.getCloudletLength());
-
 		} catch (ClassCastException c) {
 			Log.printLine(getName() + ".processCloudletSubmit(): " + "ClassCastException error.");
 			c.printStackTrace();

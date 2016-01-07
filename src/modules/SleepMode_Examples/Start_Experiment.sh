@@ -1,7 +1,7 @@
 #! /bin/bash
 
 DIRCLOUDSIMJAR=../cloudsim/target/cloudsim-3.1-SNAPSHOT.jar
-classname=Sleep_example_fabio
+classname=Sleep_example_green
 
 if [ "$1" == c ]
 then
@@ -15,5 +15,6 @@ OUTPUT=/`pwd`
 #mkdir $OUTPUT
 
 java -cp $DIRCLOUDSIMJAR:. $classname > $OUTPUT/$classname.output_
+#java -Xmx22g -XX:-UseGCOverheadLimit -cp $DIRCLOUDSIMJAR:. $classname #> $OUTPUT/$classname.output_
 
 fi

@@ -60,12 +60,27 @@ public class PowerDatacenterACPITimeout extends Datacenter {
      * The migration count.
      */
     private int migrationCount;
-    
+
     private boolean finishsimulation;
-    
+
     private int total_latency_cloudlet;
     private double total_energy_states;
     private double total_energy_g0;
+
+    double currentTime = 0;
+    double minTime = 0;
+    double timeDiff = 0;
+    double timeFrameDatacenterEnergy = 0.0;
+    double timeFrameHostEnergy = 0.0;
+
+    int nG0 = 0;
+    int nS2 = 0;
+    int nS3 = 0;
+    int nG2 = 0;
+
+    double previousUtilizationOfCpu = 0.0;
+    double utilizationOfCpu = 0.0;
+    double time = 0.0;
 
     /**
      * Instantiates a new datacenter.
@@ -91,7 +106,7 @@ public class PowerDatacenterACPITimeout extends Datacenter {
         setCloudletSubmitted(-1);
         setMigrationCount(0);
         finishsimulation = false;
-        
+
     }
 
     /**
@@ -110,16 +125,16 @@ public class PowerDatacenterACPITimeout extends Datacenter {
 //            schedule(getId(), getSchedulingInterval(), CloudSimTags.VM_DATACENTER_EVENT);
 //            return;
 //        }
-        double currentTime = CloudSim.clock();
-        
-        if(finishsimulation == false)
+        currentTime = CloudSim.clock();
+
+        if (finishsimulation == false) {
             schedule(getId(), getSchedulingInterval(), CloudSimTags.VM_DATACENTER_EVENT);
+        }
 
         // if some time passed since last processing
         if (currentTime > getLastProcessTime()) {
-            System.out.print(currentTime + " ");
 
-             double minTime = updateCloudetProcessingWithoutSchedulingFutureEventsForce();
+            minTime = updateCloudetProcessingWithoutSchedulingFutureEventsForce();
 
             if (!isDisableMigrations()) {
                 List<Map<String, Object>> migrationMap = getVmAllocationPolicy().optimizeAllocation(
@@ -194,43 +209,39 @@ public class PowerDatacenterACPITimeout extends Datacenter {
      * @return the double
      */
     protected double updateCloudetProcessingWithoutSchedulingFutureEventsForce() {
-        double currentTime = CloudSim.clock();
-        double minTime = Double.MAX_VALUE;
-        double timeDiff = currentTime - getLastProcessTime();
-        double timeFrameDatacenterEnergy = 0.0;
-        double timeFrameHostEnergy = 0.0;
-        
-        int nG0 = 0;
-        int nS2 = 0;
-        int nS3 = 0;
-        int nG2 = 0;
+        currentTime = CloudSim.clock();
+        minTime = Double.MAX_VALUE;
+        timeDiff = currentTime - getLastProcessTime();
+        timeFrameDatacenterEnergy = 0.0;
+        timeFrameHostEnergy = 0.0;
+
+        nG0 = 0;
+        nS2 = 0;
+        nS3 = 0;
+        nG2 = 0;
 
         Log.printLine("\n\n--------------------------------------------------------------\n\n");
         Log.formatLine("New resource usage for the time frame starting at %.2f:", currentTime);
-
-        for (PowerHost host : this.<PowerHost>getHostList()) {
-            Log.printLine();
-
-            double time = host.updateVmsProcessing(currentTime); // inform VMs to update processing
-            if (time < minTime) {
-                minTime = time;
-            }
-
-            Log.formatLine("%.2f: [Host #%d] utilization is %.2f%%", currentTime, host.getId(), host.getUtilizationOfCpu() * 100);
-        }
 
         if (timeDiff > 0) {
             Log.formatLine("\nEnergy consumption for the last time frame from %.2f to %.2f:", getLastProcessTime(), currentTime);
 
             for (PowerHost host : this.<PowerHost>getHostList()) {
-                
-                double previousUtilizationOfCpu = host.getPreviousUtilizationOfCpu();
-                double utilizationOfCpu = host.getUtilizationOfCpu();
-                
+
+                time = host.updateVmsProcessing(currentTime); // inform VMs to update processing
+                if (time < minTime) {
+                    minTime = time;
+                }
+
+                Log.formatLine("%.2f: [Host #%d] utilization is %.2f%%", currentTime, host.getId(), host.getUtilizationOfCpu() * 100);
+
+                previousUtilizationOfCpu = host.getPreviousUtilizationOfCpu();
+                utilizationOfCpu = host.getUtilizationOfCpu();
+
                 if (host.isACPIEnergySavingEnable()) {
-                    if (host.getACPIState().equalsIgnoreCase("G0"))
+                    if (host.getACPIState().equalsIgnoreCase("G0")) {
                         nG0++;
-                    else if (host.getACPIState().equalsIgnoreCase("S3")) {
+                    } else if (host.getACPIState().equalsIgnoreCase("S3")) {
                         nS3++;
                     } else if (host.getACPIState().equalsIgnoreCase("S2")) {
                         nS2++;
@@ -238,21 +249,22 @@ public class PowerDatacenterACPITimeout extends Datacenter {
                         nG2++;
                     }
                 }
-                    
+
                 /* If we are in a sleep state */
-                if (host.isACPIEnergySavingEnable() && ! host.getACPIState().equalsIgnoreCase("G0")) {
-                    if(host.getIndexState() == PowerHost.ACPI_STAYING) {
+                if (host.isACPIEnergySavingEnable() && !host.getACPIState().equalsIgnoreCase("G0")) {
+                    if (host.getIndexState() == PowerHost.ACPI_STAYING) {
                         host.setACPIStayingTime(host.getACPIStayingTime() + timeDiff);
-                    
-                        if(host.getACPIStayingTime() >= 75) {
+
+                        if (host.getACPIStayingTime() >= 300) {
                             if (!host.getACPIState().equalsIgnoreCase("G2")) {
                                 int[] data = new int[2];
-                                
+                                System.out.println(currentTime + ": [Host " + host.getId() + "] timeout reached");
+
                                 /* Leave from current state */
                                 data[0] = host.getId();
                                 data[1] = PowerHost.ACPI_LEAVING;
                                 sendNow(getId(), CloudSimTags.HOST_CHANGE_SLEEP_STATE, data);
-                                
+
                                 /* Enter into G0 */
                                 int[] data2 = new int[2];
                                 data2[0] = host.getId();
@@ -262,25 +274,27 @@ public class PowerDatacenterACPITimeout extends Datacenter {
                                 /* Change to the deeper state */
                                 int[] data3 = new int[2];
                                 data3[0] = host.getId();
-                                if(host.getACPIState().equalsIgnoreCase("S2"))
+                                if (host.getACPIState().equalsIgnoreCase("S2")) {
                                     data3[1] = PowerHost.ACPI_S3;
-                                else if (host.getACPIState().equalsIgnoreCase("S3"))
+                                } else if (host.getACPIState().equalsIgnoreCase("S3")) {
                                     data3[1] = PowerHost.ACPI_G2;
-                                
+                                }
+
                                 int timewait = 40;
-                                if(host.getId() == 7 || host.getId() == 9)
+                                if (host.getId() == 7 || host.getId() == 9) {
                                     timewait = 60;
-                                send(getId(), host.getPowerSleepModeTime(PowerHost.ACPI_LEAVING) + timewait, CloudSimTags.HOST_CHANGE_ACPI_STATE, data3);                
+                                }
+                                send(getId(), host.getPowerSleepModeTime(PowerHost.ACPI_LEAVING) + timewait, CloudSimTags.HOST_CHANGE_ACPI_STATE, data3);
                             }
                         }
                     }
-                            
+
                     timeFrameHostEnergy = host.getPowerSleepState(timeDiff);
                     Log.formatLine("%.2f: [Host #%d] ACPI state %s in index %s", currentTime, host.getId(), host.getACPIState(), host.getIndexState() == 1 ? "Entering" : host.getIndexState() == 2 ? "Leaving" : "Staying");
-                    Log.formatLine("%.2f: [Host #%d] staying time %.2f", currentTime, host.getId(), host.getACPIStayingTime());                   
+                    Log.formatLine("%.2f: [Host #%d] staying time %.2f", currentTime, host.getId(), host.getACPIStayingTime());
 
                     total_energy_states += timeFrameHostEnergy;
-                    
+
                 } else {
                     timeFrameHostEnergy = host.getEnergyLinearInterpolation(previousUtilizationOfCpu, utilizationOfCpu, timeDiff);
                     total_energy_g0 += timeFrameHostEnergy;
@@ -293,13 +307,7 @@ public class PowerDatacenterACPITimeout extends Datacenter {
                 Log.formatLine("%.2f: [Host #%d] energy is %f W*sec", currentTime, host.getId(), timeFrameHostEnergy);
 
                 host.isDvfsActivatedOnHost();
-                
-//                if (!host.getVmList().isEmpty()) {
-//                    if (host.isEnableSleepMode() && host.getIndexSleepMode() != 0) {
-//                        host.setIndexSleepMode(0);
-//                        System.out.println("SLEEP STATE STATUS OF HOST " + host.getId() + " HAS CHANGED TO " + host.getIndexSleepMode());
-//                    }
-//                }
+
             }
 
             Log.formatLine("\n%.2f: Data center's energy is %.2f W*sec", currentTime, timeFrameDatacenterEnergy);
@@ -344,7 +352,7 @@ public class PowerDatacenterACPITimeout extends Datacenter {
             updateCloudetProcessingWithoutSchedulingFutureEventsForce();
         }
     }
-    
+
     @Override
     protected void processVmCreate(SimEvent ev, boolean ack) {
         Vm vm = (Vm) ev.getData();
@@ -352,7 +360,7 @@ public class PowerDatacenterACPITimeout extends Datacenter {
 
         boolean result = getVmAllocationPolicy().allocateHostForVm(vm);
         double delay = 0.0;
-        
+
         PowerHost host = (PowerHost) vm.getHost();
         if (result && host.isACPIEnergySavingEnable()) {
 
@@ -362,14 +370,13 @@ public class PowerDatacenterACPITimeout extends Datacenter {
             //    int[] data = new int[2];
             //    data[0] = host.getId();
             //    data[1] = PowerHost.ACPI_LEAVING;
-
             //    send(getId(), 0.01, CloudSimTags.HOST_CHANGE_SLEEP_STATE, data);              
             //}
             Log.formatLine("%.2f: Now the state of the host %d is %d", currentTime, host.getId(), host.getIndexState());
             updateCloudletProcessing();
 
         }
-        
+
         if (ack) {
             int[] data = new int[3];
             data[0] = getId();
@@ -382,8 +389,8 @@ public class PowerDatacenterACPITimeout extends Datacenter {
             }
 
             /* The host is taking from powered off */
-            if (result && ((PowerHost) vm.getHost()).isACPIEnergySavingEnable() && 
-                    ((PowerHost) vm.getHost()).getIndexState() == PowerHost.ACPI_LEAVING) {
+            if (result && ((PowerHost) vm.getHost()).isACPIEnergySavingEnable()
+                    && ((PowerHost) vm.getHost()).getIndexState() == PowerHost.ACPI_LEAVING) {
                 PowerHost tmp_host = (PowerHost) vm.getHost();
                 delay = tmp_host.getPowerSleepModeTime(PowerHost.ACPI_LEAVING);
                 total_latency_cloudlet += delay;
@@ -391,7 +398,7 @@ public class PowerDatacenterACPITimeout extends Datacenter {
             }
 
             send(vm.getUserId(), delay, CloudSimTags.VM_CREATE_ACK, data);
-            
+
         }
 
         if (result) {
@@ -425,42 +432,44 @@ public class PowerDatacenterACPITimeout extends Datacenter {
         Cloudlet cl = (Cloudlet) ev.getData();
         int userId = cl.getUserId();
         int vmId = cl.getVmId();
-                  
+
         super.processCloudletSubmit(ev, ack);
         setCloudletSubmitted(CloudSim.clock());
-               
+
         PowerHost host = (PowerHost) getVmAllocationPolicy().getHost(vmId, userId);
         if (host.isACPIEnergySavingEnable() && host.getIndexState() != 0) {
             int[] data = new int[2];
             data[0] = host.getId();
             data[1] = 0; /* 0 means powered on */
-            
+
             send(getId(), 0.02, CloudSimTags.HOST_CHANGE_SLEEP_STATE, data);
         }
     }
-    
+
     @Override
     protected void processVmDestroy(SimEvent ev, boolean ack) {
         Vm vm = (Vm) ev.getData();
         PowerHost h = (PowerHost) vm.getHost();
         double currentTime = CloudSim.clock();
-        
+
         /* all VMs already done */
-        if(h.getVmList().isEmpty())
+        if (h.getVmList().isEmpty()) {
             return;
-       
-       if (h.isACPIEnergySavingEnable() && (h.getVmList().size() - 1) == 0) {
+        }
+
+        if (h.isACPIEnergySavingEnable() && (h.getVmList().size() - 1) == 0) {
             int[] data = new int[2];
             data[0] = h.getId();
-           
+
             Log.formatLine("%.2f: Putting host %d into entering mode to save power", currentTime, h.getId());
             h.setACPIState(h.getACPIEnergySavingStrategy());
             Log.formatLine("%.2f: Changing sleep state of host %d from %s to %s (%s)", CloudSim.clock(), h.getId(), h.getIndexState() == 1 ? "Entering" : h.getIndexState() == 2 ? "Leaving" : "Staying", "Entering", h.getACPIState());
             h.setIndexState(PowerHost.ACPI_ENTERING);
             Log.formatLine("%.2f: Now the ACPI state is %s ", currentTime, h.getACPIState());
-            
+
             /* Schedule to effectively power the host off at the current sleep mode time  */
             data[1] = PowerHost.ACPI_STAYING; /* 3 means powered off */
+
             send(getId(), h.getPowerSleepModeTime(), CloudSimTags.HOST_CHANGE_SLEEP_STATE, data);
         }
         super.processVmDestroy(ev, ack);
@@ -561,7 +570,7 @@ public class PowerDatacenterACPITimeout extends Datacenter {
     protected void incrementMigrationCount() {
         setMigrationCount(getMigrationCount() + 1);
     }
-    
+
     @Override
     protected void processOtherEvent(SimEvent ev) {
         if (ev == null) {
@@ -590,55 +599,57 @@ public class PowerDatacenterACPITimeout extends Datacenter {
     }
 
     protected void processChangeHostSleepState(SimEvent ev, boolean ack) {
-            int receivedData[] = (int[]) ev.getData();
-            int hostId = receivedData[0];
-            int sleepStateIndex = receivedData[1];        
-            PowerHost h = (PowerHost) getHostList().get(hostId);
-            
+        int receivedData[] = (int[]) ev.getData();
+        int hostId = receivedData[0];
+        int sleepStateIndex = receivedData[1];
+        PowerHost h = (PowerHost) getHostList().get(hostId);
+
             //Log.formatLine("%.2f: Current transaction %d, New transaction %d", CloudSim.clock(), h.getIndexState(), sleepStateIndex);
+        if (h.getIndexState() != sleepStateIndex) {
 
-            if (h.getIndexState() != sleepStateIndex) {
-                
-                /* The host is in the Global state 0. 
-                 That is the host is now waked up */
-                if(sleepStateIndex == 0)
-                    h.setACPIState("G0");
-         
-                Log.formatLine("%.2f: Changing sleep state of host %d from %s to %s (%s)", CloudSim.clock(), hostId, h.getIndexState() == 1 ? "Entering" : h.getIndexState() == 2 ? "Leaving" : "Staying", sleepStateIndex == 1 ? "Entering" : sleepStateIndex == 2 ? "Leaving" : "Staying", h.getACPIState());
-
-                h.setIndexState(sleepStateIndex);
-                if (sleepStateIndex == PowerHost.ACPI_STAYING)
-                    h.setACPIStayingTime(0);
+            /* The host is in the Global state 0. 
+             That is the host is now waked up */
+            if (sleepStateIndex == 0) {
+                h.setACPIState("G0");
             }
+
+            Log.formatLine("%.2f: Changing sleep state of host %d from %s to %s (%s)", CloudSim.clock(), hostId, h.getIndexState() == 1 ? "Entering" : h.getIndexState() == 2 ? "Leaving" : "Staying", sleepStateIndex == 1 ? "Entering" : sleepStateIndex == 2 ? "Leaving" : "Staying", h.getACPIState());
+
+            h.setIndexState(sleepStateIndex);
+            if (sleepStateIndex == PowerHost.ACPI_STAYING) {
+                h.setACPIStayingTime(0);
+            }
+        }
     }
+
     protected void processChangeHostACPIState(SimEvent ev, boolean ack) {
         int receivedData[] = (int[]) ev.getData();
         int hostId = receivedData[0];
-        int ACPIState = receivedData[1];        
+        int ACPIState = receivedData[1];
         PowerHost h = (PowerHost) getHostList().get(hostId);
-        
+
         String old_ACPI_state = h.getACPIState();
         if (ACPIState == PowerHost.ACPI_G2) {
-            h.setACPIState("G2");             
+            h.setACPIState("G2");
         } else if (ACPIState == PowerHost.ACPI_S3) {
-            h.setACPIState("S3");  
+            h.setACPIState("S3");
         } else if (ACPIState == PowerHost.ACPI_S2) {
-            h.setACPIState("S2");  
+            h.setACPIState("S2");
         }
-        
+
         int[] data = new int[2];
         data[0] = hostId;
         data[1] = PowerHost.ACPI_ENTERING;
         sendNow(getId(), CloudSimTags.HOST_CHANGE_SLEEP_STATE, data);
- 
+
         int[] data2 = new int[2];
         data2[0] = hostId;
         data2[1] = PowerHost.ACPI_STAYING;
         send(getId(), h.getPowerSleepModeTime(PowerHost.ACPI_ENTERING), CloudSimTags.HOST_CHANGE_SLEEP_STATE, data2);
- 
+
         Log.formatLine("%.2f: Changing ACPI state of host %d from %s to %s", CloudSim.clock(), hostId, old_ACPI_state, h.getACPIState());
     }
-    
+
     public int getTotal_latency_cloudlet() {
         return total_latency_cloudlet;
     }

@@ -7,6 +7,7 @@ package org.cloudbus.cloudsim.power.models;
 
 import java.util.Iterator;
 import java.util.List;
+import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Pe;
 
 /**
@@ -51,11 +52,11 @@ public class PowerModelSpecPower_lad8 extends PowerModelSpecPowerDVFS {
         int index = tmp_pe.getIndexFreq();
 
         conso = (1 - utilization) * Tab_Power_idle[index] + utilization * Tab_Power_full[index];
-        System.out.println("Power computation : index current freq = " + index + " / associated value = " + Tab_Power_idle[index] + "/" + Tab_Power_full[index]);
+        Log.printLine("Power computation : index current freq = " + index + " / associated value = " + Tab_Power_idle[index] + "/" + Tab_Power_full[index]);
 
-        System.out.println("(1 - " + utilization + ")*" + Tab_Power_idle[index] + " + " + utilization + " * " + Tab_Power_full[index]);
+        Log.printLine("(1 - " + utilization + ")*" + Tab_Power_idle[index] + " + " + utilization + " * " + Tab_Power_full[index]);
 
-        System.out.println("Power = " + conso);
+        Log.printLine("Power = " + conso);
 
         return conso;
     }

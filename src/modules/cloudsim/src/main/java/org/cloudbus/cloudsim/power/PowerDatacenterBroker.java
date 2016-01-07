@@ -63,11 +63,11 @@ public class PowerDatacenterBroker extends DatacenterBroker {
 	protected void processVmCreate(SimEvent ev) {
 		int[] data = (int[]) ev.getData();
 		int result = data[2];
-                System.out.println(CloudSim.clock() + ": POWERDATACENTERBROKER : Cloudsim TAG = " +result);
+                Log.printLine(CloudSim.clock() + ": POWERDATACENTERBROKER : Cloudsim TAG = " +result);
 		if (result != CloudSimTags.TRUE) {
 			int datacenterId = data[0];
 			int vmId = data[1];
-			System.out.println(CloudSim.clock() + ": " + getName() + ": POWERDATACENTERBROKER : Cloudsim TAG = " +result+ " Creation of VM #" + vmId
+			Log.printLine(CloudSim.clock() + ": " + getName() + ": POWERDATACENTERBROKER : Cloudsim TAG = " +result+ " Creation of VM #" + vmId
 					+ " failed in Datacenter #" + datacenterId);
 			System.exit(0);
 		}

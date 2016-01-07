@@ -128,6 +128,9 @@ public class Cloudlet {
 	/** The vm id. */
 	protected int vmId;
 
+       	/** The host id. */
+	protected int hostId;
+       
 	/** The cost per bw. */
 	protected double costPerBw;
 
@@ -1472,5 +1475,13 @@ public class Cloudlet {
 
         public void setPerformance_metric(double performance_metric) {
             this.performance_metric = performance_metric;
+        }
+
+        public int getHostId() {
+            return hostId;
+        }
+
+        public void setHostId(int hostId) {
+            this.hostId = hostId;
         }
 }

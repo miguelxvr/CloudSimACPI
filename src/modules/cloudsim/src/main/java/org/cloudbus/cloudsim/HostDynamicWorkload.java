@@ -292,9 +292,7 @@ public class HostDynamicWorkload extends Host {
 	 * @return current utilization of CPU in percents
 	 */
 	public double getUtilizationOfCpu() {
-            System.out.println("Total mips " + getTotalMips());
 		double utilization = getUtilizationMips() / getTotalMips();
-         //       System.out.println("Utilization compute :  " + getUtilizationMips() + " / " + getTotalMips() + " = " + utilization);
 		if (utilization > 1 && utilization < 1.01) {
 			utilization = 1;
 		}

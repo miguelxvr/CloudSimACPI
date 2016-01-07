@@ -40,16 +40,13 @@ import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.SimEntity;
 import org.cloudbus.cloudsim.core.SimEvent;
 import org.cloudbus.cloudsim.core.EventPostBroker;
-import org.cloudbus.cloudsim.power.PowerDatacenterACPIFabio;
+import org.cloudbus.cloudsim.power.PowerDatacenterACPITimeout;
 import org.cloudbus.cloudsim.power.PowerDatacenterBroker;
 import org.cloudbus.cloudsim.power.PowerHost;
 
-import org.cloudbus.cloudsim.power.PowerVmAllocationPolicyACPIFabio;
+import org.cloudbus.cloudsim.power.PowerVmAllocationPolicyACPITimeout;
 
 import org.cloudbus.cloudsim.power.models.PowerModel;
-import org.cloudbus.cloudsim.power.models.PowerModelLinear;
-import org.cloudbus.cloudsim.power.models.PowerModelSpecPower_BAZAR;
-import org.cloudbus.cloudsim.power.models.PowerModelSpecPower_Atl;
 
 import org.cloudbus.cloudsim.power.models.PowerModelSpecPower_lad1;
 import org.cloudbus.cloudsim.power.models.PowerModelSpecPower_lad2;
@@ -75,7 +72,7 @@ import org.cloudbus.cloudsim.provisioners.RamProvisionerSimple;
  * frequency of the CPU are adjusted ideally according to current resource
  * requirements.
  */
-public class Sleep_example_fabio {
+public class Sleep_example_timeout {
 
     private static SimulationXMLParse ConfSimu;
     private static DvfsDatas ConfigDvfs;
@@ -96,7 +93,6 @@ public class Sleep_example_fabio {
         try {
             
             hostsNumber = hostsNumber/10;
-            
             vect_dcbroker = new ArrayList<DatacenterBroker>();
             int num_user = 1; // number of cloud users
             Calendar calendar = Calendar.getInstance();
@@ -105,9 +101,8 @@ public class Sleep_example_fabio {
             // Initialize the CloudSim library
             CloudSim.init(num_user, calendar, trace_flag);
 
-            PowerDatacenterACPIFabio datacenter = createDatacenter("Datacenter_0");
+            PowerDatacenterACPITimeout datacenter = createDatacenter("Datacenter_0");
             datacenter.setDisableMigrations(true);
-            datacenter.setCheck_interval(120);
             PowerDatacenterBroker broker = createBroker("Broker_0");
 
             int brokerId = broker.getId();
@@ -118,166 +113,60 @@ public class Sleep_example_fabio {
 
             int time_next = 0;
             for (int i = 0; i < hostsNumber; i++) {
-
-                  
-//        // Host 1
-//                
-//                sendLoad(0 + time_next, 300 + time_next, 100);             
-//                sendLoad(1800 + time_next, 2460 + time_next, 100);
-//                sendLoad(3120 + time_next, 4560 + time_next, 100);
-//
-//	// Host 2
-//                
-//                sendLoad(0 + time_next, 300 + time_next, 100);
-//                sendLoad(1920 + time_next, 2580 + time_next, 100);
-//                sendLoad(3420 + time_next, 4680 + time_next, 100);
-//
-//	// Host 3
-//                
-//                sendLoad(600 + time_next, 1200 + time_next, 100);
-//                sendLoad(3720 + time_next, 4680 + time_next, 100);
-//
-//	// Host 4
-//
-//                sendLoad(600 + time_next, 1200 + time_next, 100);
-//                sendLoad(3840 + time_next, 4740 + time_next, 100);
-//
-//	// Host 5
-//                
-//                sendLoad(820 + time_next, 1420 + time_next, 100);
-//                sendLoad(3960 + time_next, 4800 + time_next, 100);
-//
-//	// Host 6
-//
-//                sendLoad(880 + time_next, 1480 + time_next, 100);
-//                sendLoad(4080 + time_next, 4860 + time_next, 100);
-//
-//	// Host 7
-//
-//                sendLoad(840 + time_next, 1440 + time_next, 100);
-//                sendLoad(4200 + time_next, 4920 + time_next, 100);
-//
-//	// Host 8
-//
-//                sendLoad(900 + time_next, 1500 + time_next, 100);
-//                sendLoad(4320 + time_next, 4980 + time_next, 100);
-//
-//	// Host 9
-//     
-//                sendLoad(2040 + time_next, 2700 + time_next, 100);
-//                sendLoad(4320 + time_next, 4920 + time_next, 100);
-//
-//	// Host 10
-//
-//                sendLoad(2160 + time_next, 2820 + time_next, 100);
-//                sendLoad(4500 + time_next, 5700 + time_next, 100);
-
-//                  Migration
-                 // Host 1
- 
-               sendLoad(0 + time_next, 10 + time_next, 50);
-                sendLoad(1800 + time_next, 1130 + time_next, 50);
-                sendLoad(1810 + time_next, 2460 + time_next, 100);
+                
+        // Host 1
+                
+                sendLoad(0 + time_next, 300 + time_next, 100);             
+                sendLoad(1800 + time_next, 2460 + time_next, 100);
                 sendLoad(3120 + time_next, 4560 + time_next, 100);
- 
-         // Host 2
+
+	// Host 2
                 
-                sendLoad(0 + time_next, 10 + time_next, 50);
-                sendLoad(10 + time_next, 300 + time_next, 100);
-                sendLoad(1920 + time_next, 10 + time_next, 50);
-                sendLoad(2470 + time_next, 2580 + time_next, 50);
+                sendLoad(0 + time_next, 300 + time_next, 100);
+                sendLoad(1920 + time_next, 2580 + time_next, 100);
                 sendLoad(3420 + time_next, 4680 + time_next, 100);
- 
-         // Host 3
+
+	// Host 3
                 
-                sendLoad(600 + time_next, 610 + time_next, 50);
+                sendLoad(600 + time_next, 1200 + time_next, 100);
                 sendLoad(3720 + time_next, 4680 + time_next, 100);
- 
-         // Host 4
- 
-                sendLoad(600 + time_next, 610 + time_next, 50);
-                sendLoad(610 + time_next, 1200 + time_next, 100);
-                sendLoad(3840 + time_next, 140 + time_next, 50);
- 
-         // Host 5
+
+	// Host 4
+
+                sendLoad(600 + time_next, 1200 + time_next, 100);
+                sendLoad(3840 + time_next, 4740 + time_next, 100);
+
+	// Host 5
                 
-                sendLoad(820 + time_next, 860 + time_next, 50);
-                sendLoad(3960 + time_next, 4740 + time_next, 50);
-                sendLoad(4740 + time_next, 4800 + time_next, 100);
- 
- 
-         // Host 6
- 
-                sendLoad(880 + time_next, 890 + time_next, 50);
-                sendLoad(890 + time_next, 1420 + time_next, 100);
-                sendLoad(1420 + time_next, 1480 + time_next, 50);
+                sendLoad(820 + time_next, 1420 + time_next, 100);
+                sendLoad(3960 + time_next, 4800 + time_next, 100);
+
+	// Host 6
+
+                sendLoad(880 + time_next, 1480 + time_next, 100);
                 sendLoad(4080 + time_next, 4860 + time_next, 100);
- 
-         // Host 7
- 
-                sendLoad(840 + time_next, 910 + time_next, 50);
+
+	// Host 7
+
+                sendLoad(840 + time_next, 1440 + time_next, 100);
                 sendLoad(4200 + time_next, 4920 + time_next, 100);
- 
-         // Host 8
- 
-                sendLoad(900 + time_next, 910 + time_next, 50);
-                sendLoad(910 + time_next, 1440 + time_next, 100);
-                sendLoad(1440 + time_next, 1500 + time_next, 100);
+
+	// Host 8
+
+                sendLoad(900 + time_next, 1500 + time_next, 100);
                 sendLoad(4320 + time_next, 4980 + time_next, 100);
- 
-         // Host 9
+
+	// Host 9
      
-                sendLoad(2040 + time_next, 2170 + time_next, 50);
-                sendLoad(4320 + time_next, 4510 + time_next, 50);
-                sendLoad(4510 + time_next, 4920 + time_next, 100);
- 
- 
- 
-         // Host 10
- 
-                sendLoad(2160 + time_next, 2170 + time_next, 50);
-                sendLoad(2700 + time_next, 2820 + time_next, 50);
-                sendLoad(4500 + time_next, 4510 + time_next, 50);
-                sendLoad(4920 + time_next, 5700 + time_next, 50);
-//                sendLoad(0 + time_next, 10 + time_next, 50);
-//                sendLoad(0 + time_next, 10 + time_next, 50);
-//                sendLoad(0 + time_next, 10 + time_next, 50);
-//                sendLoad(0 + time_next, 10 + time_next, 50);
-//                sendLoad(10 + time_next, 400 + time_next, 100);
-//                sendLoad(10 + time_next, 400 + time_next, 100);
-//                sendLoad(200 + time_next, 210 + time_next, 50);
-//                sendLoad(200 + time_next, 210 + time_next, 50);
-//                sendLoad(200 + time_next, 210 + time_next, 50);
-//                sendLoad(200 + time_next, 210 + time_next, 50);
-//                sendLoad(210 + time_next, 400 + time_next, 100);
-//                sendLoad(210 + time_next, 400 + time_next, 100);
-//                sendLoad(600 + time_next, 710 + time_next, 50);
-//                sendLoad(700 + time_next, 710 + time_next, 50);
-//                sendLoad(710 + time_next, 1000 + time_next, 100);
-//                sendLoad(800 + time_next, 910 + time_next, 50);
-//                sendLoad(900 + time_next, 910 + time_next, 50);
-//                sendLoad(910 + time_next, 1000 + time_next, 100);
-//                sendLoad(1000 + time_next, 1110 + time_next, 50);
-//                sendLoad(1100 + time_next, 1110 + time_next, 50);
-//                sendLoad(1100 + time_next, 2000 + time_next, 100);
-//                sendLoad(1200 + time_next, 1310 + time_next, 50);
-//                sendLoad(1300 + time_next, 1310 + time_next, 50);
-//                sendLoad(1310 + time_next, 2000 + time_next, 100);
-//                sendLoad(1400 + time_next, 1510 + time_next, 50);
-//                sendLoad(1500 + time_next, 1510 + time_next, 50);
-//                sendLoad(1510 + time_next, 2000 + time_next, 100);
-//                sendLoad(1600 + time_next, 1710 + time_next, 50);
-//                sendLoad(1700 + time_next, 1710 + time_next, 50);
-//                sendLoad(1710 + time_next, 2000 + time_next, 100);
-//                sendLoad(1800 + time_next, 1910 + time_next, 50);
-//                sendLoad(1900 + time_next, 1910 + time_next, 50);
-//                sendLoad(1910 + time_next, 2000 + time_next, 100);
-//                sendLoad(2300 + time_next, 2410 + time_next, 50);
-//                sendLoad(2400 + time_next, 2410 + time_next, 50);
-//                sendLoad(2410 + time_next, 3000 + time_next, 100);
-                
-//                time_next = time_next + 3050;
-              
+                sendLoad(2040 + time_next, 2700 + time_next, 100);
+                sendLoad(4320 + time_next, 4920 + time_next, 100);
+
+	// Host 10
+
+                sendLoad(2160 + time_next, 2820 + time_next, 100);
+                sendLoad(4500 + time_next, 5700 + time_next, 100);
+
+                //time_next = time_next + 7000;
             }
 
             broker.submitVmList(vmList);
@@ -285,9 +174,9 @@ public class Sleep_example_fabio {
 
             Log.printLine(" Time to start \n\n");
             
-            Log.disable();
+            //Log.disable();
             double lastClock = CloudSim.startSimulation();
-            Log.enable();
+            //Log.enable();
 
             // Final step: Print results when simulation is over
             List<Cloudlet> newList = vect_dcbroker.get(0).getCloudletReceivedList();
@@ -350,7 +239,6 @@ public class Sleep_example_fabio {
         Cloudlet cloudlet = new Cloudlet(no_cur_cloudlet, length, pesNumber, fileSize, outputSize, new UtilizationModelFull(), new UtilizationModelFull(), new UtilizationModelFull());
         cloudlet.setUserId(userId);
         cloudlet.setVmId(no_cur_cloudlet);
-        cloudlet.setPerformance_metric(performance_metric);
         no_cur_cloudlet++;
         System.out.println("Cloudlet created // No Cloudlet =  " + no_cur_cloudlet);
 
@@ -449,7 +337,7 @@ public class Sleep_example_fabio {
         return powerHost;
     }
 
-    private static PowerDatacenterACPIFabio createDatacenter(String name) throws Exception {
+    private static PowerDatacenterACPITimeout createDatacenter(String name) throws Exception {
 
         List<PowerHost> hostList = new ArrayList<>();
 
@@ -650,12 +538,12 @@ public class Sleep_example_fabio {
         DatacenterCharacteristics characteristics = new DatacenterCharacteristics(
                 arch, os, vmm, hostList, time_zone, cost, costPerMem, costPerStorage, costPerBw);
 
-        PowerDatacenterACPIFabio powerDatacenterACPI = null;
+        PowerDatacenterACPITimeout powerDatacenterACPI = null;
         try {
-            powerDatacenterACPI = new PowerDatacenterACPIFabio(
+            powerDatacenterACPI = new PowerDatacenterACPITimeout(
                     name,
                     characteristics,
-                    new PowerVmAllocationPolicyACPIFabio(hostList),
+                    new PowerVmAllocationPolicyACPITimeout(hostList),
                     new LinkedList<Storage>(),
                     1.00); // fix to 0.1 as the Dvfs Sampling Rate in the Linux Kernel
         } catch (Exception e) {

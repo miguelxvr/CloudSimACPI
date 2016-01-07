@@ -57,10 +57,13 @@ public class PowerHost extends HostDynamicWorkload {
     private String ACPIState;
     private String ACPIEnergySavingStrategy;
     private double ACPIStayingTime;
-
+    private double ACPILeavingTime;
+   
     /* All available ACPI states */
     private int ACPIindexState = ACPI_STAYING;
     private HashMap<String, ACPIStateDatas> ACPIConfig;
+    
+    private boolean isStateChanging = false;
 
     /**
      * Instantiates a new host.
@@ -207,7 +210,6 @@ public class PowerHost extends HostDynamicWorkload {
     protected double getPower(double utilization) {
         double power = 0;
         try {
-            //System.out.println("utilization ds getpower = " + utilization);
             power = getPowerModel().getPower(utilization);
         } catch (Exception e) {
             e.printStackTrace();
@@ -376,5 +378,21 @@ public class PowerHost extends HostDynamicWorkload {
 
     public void setACPIStayingTime(double ACPIStayingTime) {
         this.ACPIStayingTime = ACPIStayingTime;
+    }
+
+    public double getACPILeavingTime() {
+        return ACPILeavingTime;
+    }
+
+    public void setACPILeavingTime(double ACPILeavingTime) {
+        this.ACPILeavingTime = ACPILeavingTime;
+    }
+    
+    public boolean isIsStateChanging() {
+        return isStateChanging;
+    }
+
+    public void setIsStateChanging(boolean isStateChanging) {
+        this.isStateChanging = isStateChanging;
     }
 }

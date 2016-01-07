@@ -154,7 +154,6 @@ public class WorkflowDatacenter extends Datacenter {
 			CloudletScheduler scheduler = vm.getCloudletScheduler();
 			double estimatedFinishTime = scheduler.cloudletSubmit(cl);
 			if (estimatedFinishTime<QUANTUM) estimatedFinishTime=QUANTUM;
-                        System.out.println("processCloudletSubmit -> enviando evento para o datacenter");
 
 			send(getId(),estimatedFinishTime,CloudSimTags.VM_DATACENTER_EVENT);
 			if (ack) {
@@ -188,8 +187,6 @@ public class WorkflowDatacenter extends Datacenter {
 				double delay = smallerTime-CloudSim.clock();
 				if (delay<QUANTUM) delay=QUANTUM;
                                 
-                                System.out.println("updateCloudletProcessing -> enviando evento para o datacenter");
-
 				schedule(getId(), delay, CloudSimTags.VM_DATACENTER_EVENT);
 			} 
 			setLastProcessTime(CloudSim.clock());
